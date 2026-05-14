@@ -1,2 +1,0 @@
-# list ubuntu packges needed to build dependencies, one per line
-# python3.x-dev # un-comment and modify if you need to build packages from scratch

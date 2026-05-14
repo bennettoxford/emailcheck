@@ -37,17 +37,3 @@ jobs:
         #env:  # Add environment variables required for tests
         run: |
           just test
-
-  test-docker:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-      - uses: "opensafely-core/setup-action@v1"
-        with:
-          install-uv: true
-          install-just: true
-          cache: uv
-      - name: Run docker tests
-        #env:  # Add environment variables required for tests
-        run: |
-          just docker/test
