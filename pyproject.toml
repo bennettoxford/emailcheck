@@ -7,6 +7,16 @@ requires-python = ">=3.13"
 dependencies = [
 ]
 
+[project.scripts]
+emailcheck = "emailcheck:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["emailcheck"]
+
 [tool.coverage.run]
 branch = true
 dynamic_context = "test_function"
