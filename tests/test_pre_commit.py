@@ -37,6 +37,30 @@ def test_pre_commit_hook_rejects_commits_appropriately(tmp_path):
     assert "Detected strings which look like email addresses" in output
     assert "bob@test.org" in output
 
+    repo.joinpath(".emailcheck_ignore").write_text(
+        """
+        # This address is intentionally present in the test fixture.
+        bob@test.org
+        """
+    )
+    run(["git", "add", ".emailcheck_ignore"], repo, env)
+    ignored_commit = run(
+        ["git", "commit", "-m", "Add ignored email address"],
+        repo,
+        env,
+    )
+
+    assert ignored_commit.returncode == 0
+
+    committed_files = run(
+        ["git", "show", "--name-only", "--format=", "HEAD"],
+        repo,
+        env,
+    ).stdout.splitlines()
+
+    assert ".emailcheck_ignore" in committed_files
+    assert "contacts.txt" in committed_files
+
 
 def create_test_repo(tmp_path):
     home = tmp_path / "home"

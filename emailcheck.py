@@ -30,12 +30,28 @@ EMAIL_RE = re.compile(
 )
 
 
-def find_emails(content):
+IGNORE_FILE = pathlib.Path(".emailcheck_ignore")
+
+
+def find_emails(content, ignored_emails=()):
     for match in EMAIL_RE.finditer(content):
-        email = match.group()
-        if email.lower().endswith(b"@example.com"):
+        email = match.group().decode("ascii")
+        email_norm = email.casefold()
+        if email_norm in ignored_emails or email_norm.endswith("@example.com"):
             continue
-        yield email.decode("ascii")
+        yield email
+
+
+def read_ignored_emails(path):
+    if not path.exists():
+        return set()
+
+    ignored_emails = set()
+    for line in path.read_text().splitlines():
+        line = line.partition("#")[0]
+        for email in line.split():
+            ignored_emails.add(email.casefold())
+    return ignored_emails
 
 
 def main(argv=None):
@@ -43,9 +59,10 @@ def main(argv=None):
     parser.add_argument("filenames", nargs="+", type=pathlib.Path)
     args = parser.parse_args(argv)
 
+    ignored_emails = read_ignored_emails(IGNORE_FILE)
     found = False
     for filename in args.filenames:
-        for email in find_emails(filename.read_bytes()):
+        for email in find_emails(filename.read_bytes(), ignored_emails):
             if not found:
                 print("Detected strings which look like email addresses:\n")
             found = True
