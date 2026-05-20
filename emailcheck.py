@@ -68,7 +68,16 @@ def main(argv=None):
             found = True
             print(f"{filename}: {email}")
 
-    return 1 if found else 0
+    if found:
+        print(
+            "\n"
+            "If these are not Personally Identifiable Information and legitimately\n"
+            "belong in this repo then you can add them to an `.emailcheck_ignore` file\n"
+            "in the project root directory."
+        )
+        return 1
+    else:
+        return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
