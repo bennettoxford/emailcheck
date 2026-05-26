@@ -1,3 +1,5 @@
+import pickle
+
 import emailcheck
 
 
@@ -43,6 +45,11 @@ def test_find_emails_handles_non_utf8_encodings():
     content = text.encode("latin-1")
 
     assert list(emailcheck.find_emails(content)) == ["bob@test.org"]
+
+
+def test_find_emails_ignores_binary_files():
+    content = pickle.dumps({1: "abc@def.gh"})
+    assert list(emailcheck.find_emails(content)) == []
 
 
 def test_find_emails_ignores_specified_addresses():

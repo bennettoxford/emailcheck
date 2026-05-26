@@ -34,12 +34,26 @@ IGNORE_FILE = pathlib.Path(".emailcheck_ignore")
 
 
 def find_emails(content, ignored_emails=()):
+    # We want to avoid scanning the binary files which occasionally appear in our repos
+    # e.g. images, ZIP files, XLSX files. It's not only wasteful to scan these, which
+    # are often larger than typical text files, but they also contain annoying false
+    # positives (e.g. sequences like "Xjz@E.gnE" and "9@l.mF")
+    if is_binary_format(content):
+        return
+
     for match in EMAIL_RE.finditer(content):
         email = match.group().decode("ascii")
         email_norm = email.casefold()
         if email_norm in ignored_emails or email_norm.endswith("@example.com"):
             continue
         yield email
+
+
+def is_binary_format(content):
+    # NUL bytes are a sure sign of non-text content. We only bother checking the first
+    # 4K as if it is a binary format we'll most likely see NUL bytes by then and we
+    # don't want to waste CPU scanning more than we need.
+    return content.find(b"\x00", 0, 4096) != -1
 
 
 def read_ignored_emails(path):
