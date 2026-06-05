@@ -14,7 +14,10 @@ import sys
 EMAIL_RE = re.compile(
     rb"""
     # Local part: alphanumerics or one of . _ +
-    [A-Za-z0-9._+]+
+    # To improve performance of the regex on long hex/base64 encoded strings we only
+    # match the last 64 characters. This will cover most reasonable addresses, and if an
+    # address is longer it will still match, we'll just report a truncated version.
+    [A-Za-z0-9._+]{1,64}
 
     @
 

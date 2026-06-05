@@ -22,6 +22,15 @@ def test_find_emails():
     ]
 
 
+def test_find_emails_still_matches_long_addresses():
+    text = """
+        some_long_address_foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar@test.com
+    """
+    assert list(emailcheck.find_emails(text.encode())) == [
+        "obarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar@test.com"
+    ]
+
+
 def test_find_emails_ignores_example_domain():
     text = "dave@example.com"
     assert list(emailcheck.find_emails(text.encode())) == []
