@@ -31,11 +31,6 @@ def test_find_emails_still_matches_long_addresses():
     ]
 
 
-def test_find_emails_ignores_example_domain():
-    text = "dave@example.com"
-    assert list(emailcheck.find_emails(text.encode())) == []
-
-
 def test_find_emails_ignores_other_uses_of_at_mark():
     text = """
     @my_decorator
@@ -66,6 +61,14 @@ def test_find_emails_ignores_specified_addresses():
 
     assert list(emailcheck.find_emails(text.encode(), {"alice@test.org"})) == [
         "bob@test.org",
+        "carol@test.org",
+    ]
+
+
+def test_find_emails_ignores_specified_domains():
+    text = "bob@test.com Alice@TEST.com carol@test.org"
+
+    assert list(emailcheck.find_emails(text.encode(), {"@test.com"})) == [
         "carol@test.org",
     ]
 
@@ -121,11 +124,19 @@ def test_main_exits_zero_when_there_are_no_matches(tmp_path, capsys):
     assert capsys.readouterr().out == ""
 
 
+def test_main_ignores_example_domain_by_default(tmp_path, capsys):
+    path = tmp_path / "content.txt"
+    path.write_text("dave@example.com")
+
+    assert emailcheck.main([str(path)]) == 0
+    assert capsys.readouterr().out == ""
+
+
 def test_main_uses_ignore_file_from_current_working_directory(
     tmp_path, monkeypatch, capsys
 ):
     path = tmp_path / "content.txt"
-    path.write_text("some text Bob@test.org Alice@test.co.uk")
+    path.write_text("some text Bob@test.org Alice@test.co.uk carol@example.com")
     tmp_path.joinpath(".emailcheck_ignore").write_text(
         "alice@TEST.CO.UK bob@test.org\n"
     )

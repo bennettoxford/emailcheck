@@ -35,6 +35,8 @@ EMAIL_RE = re.compile(
 
 IGNORE_FILE = pathlib.Path(".emailcheck_ignore")
 
+DEFAULT_IGNORE = {"@example.com"}
+
 
 def find_emails(content, ignored_emails=()):
     # We want to avoid scanning the binary files which occasionally appear in our repos
@@ -47,7 +49,8 @@ def find_emails(content, ignored_emails=()):
     for match in EMAIL_RE.finditer(content):
         email = match.group().decode("ascii")
         email_norm = email.casefold()
-        if email_norm in ignored_emails or email_norm.endswith("@example.com"):
+        domain_norm = "@" + email_norm.partition("@")[2]
+        if email_norm in ignored_emails or domain_norm in ignored_emails:
             continue
         yield email
 
@@ -76,7 +79,7 @@ def main(argv=None):
     parser.add_argument("filenames", nargs="+", type=pathlib.Path)
     args = parser.parse_args(argv)
 
-    ignored_emails = read_ignored_emails(IGNORE_FILE)
+    ignored_emails = read_ignored_emails(IGNORE_FILE).union(DEFAULT_IGNORE)
     found = False
     for filename in args.filenames:
         for email in find_emails(filename.read_bytes(), ignored_emails):
