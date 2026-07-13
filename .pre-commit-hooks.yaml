@@ -4,3 +4,5 @@
   entry: emailcheck
   language: python
   types: [file]
+  stages: [pre-commit, pre-push]
+  always_run: true

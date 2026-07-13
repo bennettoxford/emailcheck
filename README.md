@@ -23,9 +23,9 @@ repos:
 
 ## Usage
 
-Once installed, `emailcheck` runs automatically when you commit. If it finds an
+Once installed, `emailcheck` runs automatically when you commit or push. If it finds an
 email-like string, it prints the matching filename and address, then exits non-zero so
-the commit is blocked:
+the commit or push is blocked:
 
 ```text
 Detected strings which look like email addresses:
