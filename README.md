@@ -11,8 +11,16 @@ False positives can be excluded by adding them to a `.emailcheck_ignore` file.
 ## Installation
 
 Assuming `pre-commit` in already installed in the target repository you can install this
-hook by updating the `.pre-commit-config.yaml` file:
+hook by updating the `.pre-commit-config.yaml` file.
 
+First ensure that `pre-commit` will install `pre-push` hooks:
+```yaml
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+```
+
+Then add an entry to the `repos` list:
 ```yaml
 repos:
   - repo: https://github.com/bennettoxford/emailcheck
@@ -23,9 +31,9 @@ repos:
 
 ## Usage
 
-Once installed, `emailcheck` runs automatically when you commit. If it finds an
+Once installed, `emailcheck` runs automatically when you commit or push. If it finds an
 email-like string, it prints the matching filename and address, then exits non-zero so
-the commit is blocked:
+the commit or push is blocked:
 
 ```text
 Detected strings which look like email addresses:
