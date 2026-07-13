@@ -4,6 +4,7 @@ import argparse
 import os
 import pathlib
 import re
+import subprocess
 import sys
 
 
@@ -75,8 +76,44 @@ def read_ignored_emails(path):
     return ignored_emails
 
 
-def get_additions_between_git_refs(from_ref, to_ref):  # pragma: no cover
-    raise NotImplementedError()
+def get_commits_between_git_refs(from_ref, to_ref):
+    result = subprocess.run(
+        ["git", "rev-list", f"{from_ref}..{to_ref}"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.splitlines()
+
+
+def get_additions_in_commit(commit_id):
+    result = subprocess.run(
+        [
+            "git",
+            "show",
+            "--format=",
+            "--no-color",
+            "--no-ext-diff",
+            "--no-renames",
+            "--unified=0",
+            commit_id,
+        ],
+        check=True,
+        capture_output=True,
+    )
+    for chunk in result.stdout.split(b"\n+++ b/")[1:]:
+        encoded_filename, _, diff = chunk.partition(b"\n")
+        filename = os.fsdecode(encoded_filename)
+        content = b"".join(
+            line[1:] for line in diff.splitlines(keepends=True) if line.startswith(b"+")
+        )
+        yield filename, content
+
+
+def get_additions_between_git_refs(from_ref, to_ref):
+    for commit_id in get_commits_between_git_refs(from_ref, to_ref):
+        for filename, content in get_additions_in_commit(commit_id):
+            yield f"{commit_id[:8]} {filename}", content
 
 
 def check_for_email_addresses(sources, ignored_emails, log):

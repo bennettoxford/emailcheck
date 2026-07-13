@@ -1,9 +1,20 @@
 import pickle
+import subprocess
 import unittest.mock
 
 import pytest
 
 import emailcheck
+
+
+def git(*args, cwd):
+    return subprocess.run(
+        ["git", *args],
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 def test_find_emails():
@@ -98,6 +109,39 @@ def test_read_ignored_emails_ignores_comments_and_whitespace(tmp_path):
         "carol@test.org",
         "dan@test.org",
     }
+
+
+def test_main_pre_push_check_finds_email_removed_before_push(
+    tmp_path, monkeypatch, capsys
+):
+    git("init", cwd=tmp_path)
+    git("config", "user.name", "Test User", cwd=tmp_path)
+    git("config", "user.email", "test@example.com", cwd=tmp_path)
+
+    contacts = tmp_path / "contacts.txt"
+    contacts.write_text("No email addresses yet\n")
+    git("add", "contacts.txt", cwd=tmp_path)
+    git("commit", "-m", "Initial commit", cwd=tmp_path)
+    from_ref = git("rev-parse", "HEAD", cwd=tmp_path).stdout.strip()
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("PRE_COMMIT_FROM_REF", from_ref)
+    monkeypatch.setenv("PRE_COMMIT_TO_REF", "HEAD")
+    assert emailcheck.main([]) == 0
+    assert capsys.readouterr().out == ""
+
+    contacts.write_text("alice@personal.test\nbob@personal.test\n")
+    git("commit", "-am", "Add contact", cwd=tmp_path)
+    email_commit = git("rev-parse", "HEAD", cwd=tmp_path).stdout.strip()
+
+    contacts.write_text("No email addresses here\n")
+    git("commit", "-am", "Remove contact", cwd=tmp_path)
+
+    assert emailcheck.main([]) == 1
+
+    output = capsys.readouterr().out
+    assert f"{email_commit[:8]} contacts.txt: alice@personal.test" in output
+    assert f"{email_commit[:8]} contacts.txt: bob@personal.test" in output
 
 
 def test_main_requires_filenames_without_pre_push_env_vars(capsys, monkeypatch):
