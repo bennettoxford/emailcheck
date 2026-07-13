@@ -74,22 +74,17 @@ def read_ignored_emails(path):
     return ignored_emails
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("filenames", nargs="+", type=pathlib.Path)
-    args = parser.parse_args(argv)
-
-    ignored_emails = read_ignored_emails(IGNORE_FILE).union(DEFAULT_IGNORE)
+def check_for_email_addresses(sources, ignored_emails, log):
     found = False
-    for filename in args.filenames:
-        for email in find_emails(filename.read_bytes(), ignored_emails):
+    for filename, content in sources:
+        for email in find_emails(content, ignored_emails):
             if not found:
-                print("Detected strings which look like email addresses:\n")
+                log("Detected strings which look like email addresses:\n")
             found = True
-            print(f"{filename}: {email}")
+            log(f"{filename}: {email}")
 
     if found:
-        print(
+        log(
             "\n"
             "If these are not Personally Identifiable Information and legitimately\n"
             "belong in this repo then you can add them to an `.emailcheck_ignore` file\n"
@@ -97,9 +92,19 @@ def main(argv=None):
             "\n"
             "To ignore all addresses from a particular domain use: @example-domain.com"
         )
-        return 1
-    else:
-        return 0
+        return True
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("filenames", nargs="+", type=pathlib.Path)
+    args = parser.parse_args(argv)
+
+    ignored_emails = read_ignored_emails(IGNORE_FILE).union(DEFAULT_IGNORE)
+    sources = ((str(filename), filename.read_bytes()) for filename in args.filenames)
+
+    found = check_for_email_addresses(sources, ignored_emails, log=print)
+    return 1 if found else 0
 
 
 if __name__ == "__main__":  # pragma: no cover
