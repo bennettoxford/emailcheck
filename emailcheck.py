@@ -1,6 +1,7 @@
 "Find email-like strings in files"
 
 import argparse
+import os
 import pathlib
 import re
 import sys
@@ -74,6 +75,10 @@ def read_ignored_emails(path):
     return ignored_emails
 
 
+def get_additions_between_git_refs(from_ref, to_ref):  # pragma: no cover
+    raise NotImplementedError()
+
+
 def check_for_email_addresses(sources, ignored_emails, log):
     found = False
     for filename, content in sources:
@@ -97,11 +102,27 @@ def check_for_email_addresses(sources, ignored_emails, log):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("filenames", nargs="+", type=pathlib.Path)
+    parser.add_argument("filenames", nargs="*", type=pathlib.Path)
     args = parser.parse_args(argv)
 
+    from_ref = os.environ.get("PRE_COMMIT_FROM_REF")
+    to_ref = os.environ.get("PRE_COMMIT_TO_REF")
+
     ignored_emails = read_ignored_emails(IGNORE_FILE).union(DEFAULT_IGNORE)
-    sources = ((str(filename), filename.read_bytes()) for filename in args.filenames)
+
+    if from_ref or to_ref:
+        if not (from_ref and to_ref):
+            parser.error(
+                "PRE_COMMIT_FROM_REF and PRE_COMMIT_TO_REF environment "
+                "variables must both be set if either is"
+            )
+        sources = get_additions_between_git_refs(from_ref, to_ref)
+    elif args.filenames:
+        sources = (
+            (str(filename), filename.read_bytes()) for filename in args.filenames
+        )
+    else:
+        parser.error("the following arguments are required: filenames")
 
     found = check_for_email_addresses(sources, ignored_emails, log=print)
     return 1 if found else 0

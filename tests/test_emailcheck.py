@@ -1,4 +1,7 @@
 import pickle
+import unittest.mock
+
+import pytest
 
 import emailcheck
 
@@ -95,6 +98,45 @@ def test_read_ignored_emails_ignores_comments_and_whitespace(tmp_path):
         "carol@test.org",
         "dan@test.org",
     }
+
+
+def test_main_requires_filenames_without_pre_push_env_vars(capsys, monkeypatch):
+    monkeypatch.delenv("PRE_COMMIT_FROM_REF", raising=False)
+    monkeypatch.delenv("PRE_COMMIT_TO_REF", raising=False)
+    with pytest.raises(SystemExit) as exc_info:
+        emailcheck.main([])
+
+    assert exc_info.value.code == 2
+    assert "the following arguments are required: filenames" in capsys.readouterr().err
+
+
+def test_main_requires_both_pre_push_env_vars(capsys, monkeypatch):
+    monkeypatch.delenv("PRE_COMMIT_FROM_REF", raising=False)
+    monkeypatch.setenv("PRE_COMMIT_TO_REF", "HEAD")
+    with pytest.raises(SystemExit) as exc_info:
+        emailcheck.main([])
+
+    assert exc_info.value.code == 2
+    assert (
+        "PRE_COMMIT_FROM_REF and PRE_COMMIT_TO_REF environment variables must both "
+        "be set if either is"
+    ) in capsys.readouterr().err
+
+
+def test_main_pre_push_ignores_filenames_and_uses_pre_commit_refs(
+    tmp_path, monkeypatch, capsys
+):
+    mocked = unittest.mock.Mock(
+        spec=emailcheck.get_additions_between_git_refs, return_value=()
+    )
+
+    monkeypatch.setattr(emailcheck, "get_additions_between_git_refs", mocked)
+    monkeypatch.setenv("PRE_COMMIT_FROM_REF", "origin/main")
+    monkeypatch.setenv("PRE_COMMIT_TO_REF", "HEAD")
+
+    assert emailcheck.main(["does-not-exist.txt"]) == 0
+    mocked.assert_called_once_with("origin/main", "HEAD")
+    assert capsys.readouterr().out == ""
 
 
 def test_main_prints_matches_and_exits_one(tmp_path, capsys):
