@@ -62,6 +62,30 @@ def test_pre_commit_hook_rejects_commits_appropriately(tmp_path):
     assert "contacts.txt" in committed_files
 
 
+def test_pre_push_hook_rejects_email_removed_before_push(tmp_path):
+    repo, env = create_test_repo(tmp_path)
+
+    remote = tmp_path / "remote.git"
+    run(["git", "init", "--bare", remote], tmp_path, env)
+    run(["git", "remote", "add", "origin", remote], repo, env)
+    run(["git", "push", "--no-verify", "origin", "HEAD:main"], repo, env)
+
+    contacts = repo / "contacts.txt"
+    contacts.write_text("alice@personal.test\n")
+    run(["git", "add", "contacts.txt"], repo, env)
+    run(["git", "commit", "--no-verify", "-m", "Add contact"], repo, env)
+
+    contacts.write_text("No email addresses here\n")
+    run(["git", "commit", "--no-verify", "-am", "Remove contact"], repo, env)
+
+    blocked_push = run(["git", "push", "origin", "HEAD:main"], repo, env, check=False)
+    output = blocked_push.stdout + blocked_push.stderr
+
+    assert blocked_push.returncode != 0
+    assert "Detected strings which look like email addresses" in output
+    assert "contacts.txt: alice@personal.test" in output
+
+
 def create_test_repo(tmp_path):
     home = tmp_path / "home"
     home.mkdir()
@@ -85,6 +109,10 @@ def create_test_repo(tmp_path):
             f"""\
             default_language_version:
               python: {yaml_quote(sys.executable)}
+
+            default_install_hook_types:
+              - pre-commit
+              - pre-push
 
             repos:
               - repo: {yaml_quote(str(hook_repo))}
