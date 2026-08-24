@@ -45,6 +45,13 @@ def test_find_emails_still_matches_long_addresses():
     ]
 
 
+def test_find_emails_does_not_match_pathalogically_long_domain_segment():
+    text = """
+        someone@foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar.test.com
+    """
+    assert list(emailcheck.find_emails(text.encode())) == []
+
+
 def test_find_emails_ignores_other_uses_of_at_mark():
     text = """
     @my_decorator

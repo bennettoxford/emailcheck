@@ -28,7 +28,7 @@ EMAIL_RE = re.compile(
     #   - may contain hyphens in the middle
     # This excludes IPv4/IPv6 literals because the domain must end in a
     # letter-only TLD and must contain at least one dot.
-    (?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+
+    (?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,63}[A-Za-z0-9])?\.)+
     [A-Za-z]{2,63}
     """,
     re.VERBOSE,
