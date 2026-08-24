@@ -45,7 +45,7 @@ def test_pre_commit_hook_rejects_commits_appropriately(tmp_path):
     )
     run(["git", "add", ".emailcheck_ignore"], repo, env)
     ignored_commit = run(
-        ["git", "commit", "-m", "Add ignored email address"],
+        ["git", "commit", "-m", "Add ignored email address and file with that address"],
         repo,
         env,
     )
