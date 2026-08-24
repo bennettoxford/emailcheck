@@ -195,9 +195,9 @@ def test_main_prints_matches_and_exits_one(tmp_path, capsys):
             f"{path}: Bob@test.org\n",
             f"{path}: alice@TEST.co.uk\n",
             "\n",
-            "If these are not Personally Identifiable Information and legitimately\n",
-            "belong in this repo then you can add them to an `.emailcheck_ignore` file\n",
-            "in the project root directory.\n",
+            "This operation was blocked to prevent a possible data leak. If these\n",
+            "legitimately belong in this repo then you can add them to an\n",
+            "`.emailcheck_ignore` file in the project root directory.\n",
             "\n",
             "To ignore all addresses from a particular domain use: @example-domain.com\n",
         ]
