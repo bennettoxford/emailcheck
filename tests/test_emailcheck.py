@@ -25,6 +25,7 @@ def test_find_emails():
         {bob@test.org}
         alice@subdomain.test.org
         name123.other_name+label@my-site.com
+        hypenated-name@my-site.com
     """
     assert list(emailcheck.find_emails(text.encode())) == [
         "alice@test.org",
@@ -33,6 +34,7 @@ def test_find_emails():
         "bob@test.org",
         "alice@subdomain.test.org",
         "name123.other_name+label@my-site.com",
+        "hypenated-name@my-site.com",
     ]
 
 

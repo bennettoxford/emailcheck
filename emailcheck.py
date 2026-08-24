@@ -19,7 +19,7 @@ EMAIL_RE = re.compile(
     # To improve performance of the regex on long hex/base64 encoded strings we only
     # match the last 64 characters. This will cover most reasonable addresses, and if an
     # address is longer it will still match, we'll just report a truncated version.
-    [A-Za-z0-9._+]{1,64}
+    [A-Za-z0-9._+-]{1,64}
 
     @
 
