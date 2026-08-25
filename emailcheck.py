@@ -76,43 +76,37 @@ def read_ignored_emails(path):
     return ignored_emails
 
 
-def get_commits_between_git_refs(from_ref, to_ref):
-    result = subprocess.run(
-        ["git", "rev-list", f"{from_ref}..{to_ref}"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return result.stdout.splitlines()
-
-
-def get_additions_in_commit(commit_id):
+def get_additions_between_git_refs(from_ref, to_ref):
     result = subprocess.run(
         [
             "git",
-            "show",
-            "--format=",
-            "--no-color",
-            "--no-ext-diff",
-            "--no-renames",
+            "log",
+            f"{from_ref}..{to_ref}",
+            # Use NUL byte as a commit delimiter for clean, unambiguous parsing
+            "--format=%x00%H",
+            # Include only changed lines, not context lines (implies `--patch`)
             "--unified=0",
-            commit_id,
+            # Git's default behaviour hides the contents of merge commits, this forces
+            # them to be shown as diffs
+            "--diff-merges=first-parent",
+            # Clean output: no external diff helpers or colorisation
+            "--no-ext-diff",
+            "--no-color",
         ],
         check=True,
         capture_output=True,
     )
-    for chunk in result.stdout.split(b"\n+++ b/")[1:]:
-        encoded_filename, _, diff = chunk.partition(b"\n")
-        filename = os.fsdecode(encoded_filename)
-        content = b"".join(
-            line[1:] for line in diff.splitlines(keepends=True) if line.startswith(b"+")
-        )
-        yield filename, content
-
-
-def get_additions_between_git_refs(from_ref, to_ref):
-    for commit_id in get_commits_between_git_refs(from_ref, to_ref):
-        for filename, content in get_additions_in_commit(commit_id):
+    for commit in result.stdout.split(b"\x00")[1:]:
+        encoded_commit_id, _, patch = commit.partition(b"\n")
+        commit_id = encoded_commit_id.decode("ascii")
+        for chunk in patch.split(b"\n+++ b/")[1:]:
+            encoded_filename, _, diff = chunk.partition(b"\n")
+            filename = os.fsdecode(encoded_filename)
+            content = b"".join(
+                line[1:]
+                for line in diff.splitlines(keepends=True)
+                if line.startswith(b"+")
+            )
             yield f"{commit_id[:8]} {filename}", content
 
 
