@@ -1,11 +1,21 @@
 [project]
-name = "repo-template"
+name = "emailcheck"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
 ]
+
+[project.scripts]
+emailcheck = "emailcheck:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["emailcheck"]
 
 [tool.coverage.run]
 branch = true

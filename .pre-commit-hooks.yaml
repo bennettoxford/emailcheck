@@ -1,0 +1,8 @@
+- id: emailcheck
+  name: Check for personal email addresses
+  description: Find email-like strings in staged files, ignoring @example.com.
+  entry: emailcheck
+  language: python
+  types: [file]
+  stages: [pre-commit, pre-push]
+  always_run: true

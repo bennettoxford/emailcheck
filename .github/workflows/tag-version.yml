@@ -1,0 +1,33 @@
+---
+name: Tag version
+
+permissions:
+  contents: write
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types: [completed]
+
+jobs:
+  tag-version:
+    if: github.event.workflow_run.conclusion == 'success'
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Tag version
+        env:
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          tag="$(cat VERSION)"
+          git tag --force "$tag" "$COMMIT_SHA"
+          git push --force origin "refs/tags/$tag"
