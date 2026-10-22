@@ -86,6 +86,32 @@ def test_pre_push_hook_rejects_email_removed_before_push(tmp_path):
     assert "contacts.txt: alice@personal.test" in output
 
 
+def test_pre_commit_hook_allows_amending_message_without_file_changes(tmp_path):
+    repo, env = create_test_repo(tmp_path)
+
+    repo.joinpath("notes.txt").write_text("No email addresses here")
+    run(["git", "add", "notes.txt"], repo, env)
+    clean_commit = run(
+        ["git", "commit", "-m", "Add clean file"], repo, env, check=False
+    )
+    output = clean_commit.stdout + clean_commit.stderr
+
+    assert clean_commit.returncode == 0, output
+    assert "Check for personal email addresses" in output
+
+    amend = run(
+        ["git", "commit", "--amend", "-m", "Amended message"],
+        repo,
+        env,
+        check=False,
+    )
+
+    assert amend.returncode == 0, amend.stdout + amend.stderr
+    assert run(["git", "log", "-1", "--format=%s"], repo, env).stdout.strip() == (
+        "Amended message"
+    )
+
+
 def create_test_repo(tmp_path):
     home = tmp_path / "home"
     home.mkdir()

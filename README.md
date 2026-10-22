@@ -24,7 +24,7 @@ Then add an entry to the `repos` list:
 ```yaml
 repos:
   - repo: https://github.com/bennettoxford/emailcheck
-    rev: v1
+    rev: v1.0.1
     hooks:
       - id: emailcheck
 ```

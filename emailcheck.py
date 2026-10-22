@@ -148,12 +148,10 @@ def main(argv=None):
                 "variables must both be set if either is"
             )
         sources = get_additions_between_git_refs(from_ref, to_ref)
-    elif args.filenames:
+    else:
         sources = (
             (str(filename), filename.read_bytes()) for filename in args.filenames
         )
-    else:
-        parser.error("the following arguments are required: filenames")
 
     found = check_for_email_addresses(sources, ignored_emails, log=print)
     return 1 if found else 0
