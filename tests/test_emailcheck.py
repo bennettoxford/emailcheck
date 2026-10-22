@@ -153,14 +153,12 @@ def test_main_pre_push_check_finds_email_removed_before_push(
     assert f"{email_commit[:8]} contacts.txt: bob@personal.test" in output
 
 
-def test_main_requires_filenames_without_pre_push_env_vars(capsys, monkeypatch):
+def test_main_handles_no_filenames_or_pre_push_env_vars(capsys, monkeypatch):
     monkeypatch.delenv("PRE_COMMIT_FROM_REF", raising=False)
     monkeypatch.delenv("PRE_COMMIT_TO_REF", raising=False)
-    with pytest.raises(SystemExit) as exc_info:
-        emailcheck.main([])
 
-    assert exc_info.value.code == 2
-    assert "the following arguments are required: filenames" in capsys.readouterr().err
+    assert emailcheck.main([]) == 0
+    assert capsys.readouterr().out == ""
 
 
 def test_main_requires_both_pre_push_env_vars(capsys, monkeypatch):

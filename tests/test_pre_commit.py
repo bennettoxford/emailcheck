@@ -6,8 +6,6 @@ import subprocess
 import sys
 import textwrap
 
-import pytest
-
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -88,7 +86,6 @@ def test_pre_push_hook_rejects_email_removed_before_push(tmp_path):
     assert "contacts.txt: alice@personal.test" in output
 
 
-@pytest.mark.xfail
 def test_pre_commit_hook_allows_amending_message_without_file_changes(tmp_path):
     repo, env = create_test_repo(tmp_path)
 
