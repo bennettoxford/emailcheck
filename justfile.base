@@ -1,0 +1,12 @@
+######## Tooling versions ########
+
+# If adding a new docker tool, find the digest for the version you're adding by running e.g.
+# docker buildx imagetools inspect kjanat/actionlint:1.17.0
+
+actionlint_version := "1.17.1@sha256:c0a63b3e5c974c2466ead39404b70e448176beaff8c5ec7af0b2e96191aea661"
+
+
+######## Reusable variables ########
+# Run Docker with minimum possible privileges. Note that if you mount any directories
+# you must still ensure these are mounted read-only.
+docker_run_safe := 'docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true --user 65534:65534'
